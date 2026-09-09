@@ -39,16 +39,10 @@ include(FreeRTOS_Kernel_import.cmake)
 
 add_subdirectory(ArduinoCore-avr/ArduinoCore-avr-1.8.7)
 add_subdirectory(Arduino-FOC/Arduino-FOC-2.2)
+add_subdirectory(HID_FFB/HID_FFB_0.0.1)
 
 add_executable(pico_freertos_ffb
     main.cpp
-    ffb_setup.cpp
-    ffb_loop.cpp
-    foc_setup.cpp
-    foc_loop.cpp
-    usb_setup.cpp
-    usb_loop.cpp
-    wheel_registry.c
 )
 
 target_include_directories(pico_freertos_ffb PRIVATE
@@ -86,6 +80,7 @@ target_link_libraries(pico_freertos_ffb PRIVATE
 target_link_libraries(pico_freertos_ffb PRIVATE
     arduino_core
     arduino_foc
+    hid_ffb
 )
 
 # Example running FreeRTOS on 1 core
