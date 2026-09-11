@@ -20,9 +20,15 @@ target_link_libraries(hid_ffb PRIVATE
     tinyusb_board
 )
 
-target_link_libraries(hid_ffb PUBLIC
-    arduino_core
-    arduino_foc
+target_link_libraries(hid_ffb PRIVATE
+    pico_stdlib
+    hardware_uart
+    hardware_spi
+    hardware_i2c
+    hardware_irq
+    hardware_pwm
+    hardware_timer
+    hardware_clocks
 )
 
 # Example running FreeRTOS on 1 core
@@ -36,4 +42,9 @@ target_link_libraries(hid_ffb PRIVATE
 # This defaults to 2 in FreeRTOSConfig_examples_common.h if not defined in here
 target_compile_definitions(hid_ffb PRIVATE
     configNUMBER_OF_CORES=1
+)
+
+target_link_libraries(hid_ffb PRIVATE
+    arduino_core
+    arduino_foc
 )
