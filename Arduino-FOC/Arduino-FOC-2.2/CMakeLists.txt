@@ -9,6 +9,7 @@ add_library(arduino_foc STATIC
 
 target_include_directories(arduino_foc PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/src
+    ${CMAKE_SOURCE_DIR}
 )
 
 target_link_libraries(arduino_foc PRIVATE

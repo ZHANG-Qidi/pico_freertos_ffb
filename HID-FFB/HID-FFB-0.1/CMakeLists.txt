@@ -9,6 +9,7 @@ add_library(hid_ffb STATIC
 
 target_include_directories(hid_ffb PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/src
+    ${CMAKE_SOURCE_DIR}
 )
 
 # In addition to pico_stdlib required for common PicoSDK functionality, add dependency on tinyusb_device
