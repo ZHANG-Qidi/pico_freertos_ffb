@@ -77,7 +77,6 @@ void analogWriteInit(uint8_t pin) {
 
     uint sm_mask = 0b1111;  // Enable state machine 0 1 2 3
     pio_clkdiv_restart_sm_mask(pio[index], sm_mask);
-    pio_interrupt_clear(pio[index], 0);
 }
 
 // function setting the high pwm frequency to the supplied pins
@@ -89,6 +88,12 @@ void _configure3PWM(long pwm_frequency, const int pinA, const int pinB, const in
     analogWriteInit(pinA);
     analogWriteInit(pinB);
     analogWriteInit(pinC);
+    uint8_t index_a = pinA % 3;
+    uint8_t index_b = pinB % 3;
+    uint8_t index_c = pinC % 3;
+    pio_interrupt_clear(pio[index_a], 0);
+    pio_interrupt_clear(pio[index_b], 0);
+    pio_interrupt_clear(pio[index_c], 0);
 }
 
 #elif USE_PIO_PWM
@@ -112,7 +117,6 @@ void analogWriteInit(uint8_t pin) {
 
     uint sm_mask = 0b1111;  // Enable state machine 0 1 2 3
     pio_clkdiv_restart_sm_mask(pio[index], sm_mask);
-    pio_interrupt_clear(pio[index], 0);
 }
 
 // function setting the high pwm frequency to the supplied pins
@@ -124,6 +128,12 @@ void _configure3PWM(long pwm_frequency, const int pinA, const int pinB, const in
     analogWriteInit(pinA);
     analogWriteInit(pinB);
     analogWriteInit(pinC);
+    uint8_t index_a = pinA % 3;
+    uint8_t index_b = pinB % 3;
+    uint8_t index_c = pinC % 3;
+    pio_interrupt_clear(pio[index_a], 0);
+    pio_interrupt_clear(pio[index_b], 0);
+    pio_interrupt_clear(pio[index_c], 0);
 }
 
 #else
