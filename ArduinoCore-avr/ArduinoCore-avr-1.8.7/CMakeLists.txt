@@ -23,6 +23,7 @@ target_link_libraries(arduino_core PRIVATE
     hardware_timer
     hardware_clocks
     hardware_pio
+    hardware_adc
 )
 
 # Example running FreeRTOS on 1 core

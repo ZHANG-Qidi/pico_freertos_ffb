@@ -23,6 +23,11 @@ extern "C" {
 #define UART_MASTER_TX_IO (0)
 #define UART_MASTER_RX_IO (1)
 
+// ADC
+#define ADC_GPIO_0 (26)
+#define ADC_GPIO_1 (27)
+#define ADC_GPIO_2 (28)
+
 #ifdef __cplusplus
 }
 #endif

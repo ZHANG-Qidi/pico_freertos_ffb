@@ -13,6 +13,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 // FFB
+#include "adc_loop.h"
+#include "adc_setup.h"
 #include "ffb_loop.h"
 #include "ffb_setup.h"
 #include "foc_loop.h"
@@ -20,6 +22,7 @@
 #include "tusb.h"
 #include "usb_loop.h"
 #include "usb_setup.h"
+
 // Which core to run on if configNUMBER_OF_CORES==1
 #ifndef RUN_FREE_RTOS_ON_CORE
 #define RUN_FREE_RTOS_ON_CORE 0
@@ -108,6 +111,14 @@ void ffb_task(__unused void *params) {
         vTaskDelayUntil(&last, pdMS_TO_TICKS(USB_POLLING_INTERVAL));
     }
 }
+void adc_task(__unused void *params) {
+    adc_setup();
+    TickType_t last = xTaskGetTickCount();
+    for (;;) {
+        vTaskDelayUntil(&last, pdMS_TO_TICKS(ADC_READ_INTERVAL));
+        adc_loop();
+    }
+}
 // async workers run in their own thread when using async_context_freertos_t with priority WORKER_TASK_PRIORITY
 static void do_work(async_context_t *context, async_at_time_worker_t *worker) { async_context_add_at_time_worker_in_ms(context, worker, 1); }
 async_at_time_worker_t worker_timeout = {.do_work = do_work};
@@ -123,6 +134,7 @@ void main_task(__unused void *params) {
     xTaskCreate(foc_task, "foc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, &foc_task_handle);
     xTaskCreate(usb_task, "usb_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     xTaskCreate(ffb_task, "ffb_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
+    xTaskCreate(adc_task, "adc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     static struct repeating_timer timer;
     add_repeating_timer_us(-FOC_LOOP_PERIOD, repeating_timer_callback, NULL, &timer);
     TickType_t last = xTaskGetTickCount();

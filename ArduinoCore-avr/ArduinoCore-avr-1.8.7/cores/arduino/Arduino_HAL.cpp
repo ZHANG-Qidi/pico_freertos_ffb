@@ -3,6 +3,7 @@
 #include "Arduino.h"
 #include "Arduino_interface.h"
 #include "FreeRTOS.h"
+#include "hardware/adc.h"
 #include "hardware/clocks.h"
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
@@ -179,3 +180,16 @@ void _configure3PWM(long pwm_frequency, const int pinA, const int pinB, const in
 }
 
 #endif
+
+void analogReference(uint8_t mode) {
+    (void)mode;
+    adc_init();
+    adc_gpio_init(ADC_GPIO_0);
+    adc_gpio_init(ADC_GPIO_1);
+    adc_gpio_init(ADC_GPIO_2);
+}
+
+int analogRead(uint8_t pin) {
+    adc_select_input(pin);
+    return adc_read();
+}
