@@ -609,13 +609,13 @@ void BLDCMotor::setPhaseVoltage(float Uq, float Ud, float angle_el) {
             float fundamental_u_t = (fundamental_u * Uout + 1.0f) / 2.f;
             float fundamental_v_t = (fundamental_v * Uout + 1.0f) / 2.f;
             float fundamental_w_t = (fundamental_w * Uout + 1.0f) / 2.f;
-            float duty_min = fundamental_u_t < fundamental_v_t ? fundamental_u_t : fundamental_v_t;
 #define MIN_SHIFT 0
 #if MIN_SHIFT
-            duty_min = fundamental_w_t < duty_min ? fundamental_w_t : duty_min;
-            fundamental_u_t = fundamental_u_t - duty_min;
-            fundamental_v_t = fundamental_v_t - duty_min;
-            fundamental_w_t = fundamental_w_t - duty_min;
+            float fundamental_t_min = fundamental_u_t < fundamental_v_t ? fundamental_u_t : fundamental_v_t;
+            fundamental_t_min = fundamental_w_t < fundamental_t_min ? fundamental_w_t : fundamental_t_min;
+            fundamental_u_t -= fundamental_t_min;
+            fundamental_v_t -= fundamental_t_min;
+            fundamental_w_t -= fundamental_t_min;
 #endif
             Ua = fundamental_u_t * driver->voltage_limit;
             Ub = fundamental_v_t * driver->voltage_limit;
