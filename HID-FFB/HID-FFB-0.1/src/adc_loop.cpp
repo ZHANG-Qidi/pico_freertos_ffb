@@ -13,9 +13,9 @@ typedef struct {
 } adc_data_type;
 
 static adc_data_type adc_data[3] = {
-    {.min = 1 << 12},
-    {.min = 1 << 12},
-    {.min = 1 << 12},
+    {.min = 65535},
+    {.min = 65535},
+    {.min = 65535},
 };
 
 void adc_loop(void) {
