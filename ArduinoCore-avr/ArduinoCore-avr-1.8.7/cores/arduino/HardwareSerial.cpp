@@ -80,16 +80,16 @@ void HardwareSerial::begin(unsigned long baud, byte config) {
     // Set datasheet for more information on function select
     gpio_set_function(UART_MASTER_TX_IO, GPIO_FUNC_UART);
     gpio_set_function(UART_MASTER_RX_IO, GPIO_FUNC_UART);
-    irq_set_exclusive_handler(UART0_IRQ, on_uart_irq_static);
-    irq_set_priority(UART0_IRQ, 128);
-    irq_set_enabled(UART0_IRQ, true);
+    irq_set_exclusive_handler(UART_MASTER_IRQ, on_uart_irq_static);
+    irq_set_priority(UART_MASTER_IRQ, 128);
+    irq_set_enabled(UART_MASTER_IRQ, true);
     uart_set_irq_enables(UART_MASTER_NUM, true, false);
 }
 
 void HardwareSerial::end() {
     uart_set_irq_enables(UART_MASTER_NUM, false, false);
-    irq_set_enabled(UART0_IRQ, false);
-    irq_remove_handler(UART0_IRQ, on_uart_irq_static);
+    irq_set_enabled(UART_MASTER_IRQ, false);
+    irq_remove_handler(UART_MASTER_IRQ, on_uart_irq_static);
     gpio_set_function(UART_MASTER_TX_IO, GPIO_FUNC_SIO);
     gpio_set_function(UART_MASTER_RX_IO, GPIO_FUNC_SIO);
     gpio_set_dir(UART_MASTER_TX_IO, GPIO_IN);

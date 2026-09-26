@@ -1,32 +1,36 @@
 #ifndef _ARDUINO_INTERFACE_H_
 #define _ARDUINO_INTERFACE_H_
 
+#include "Arduino_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // I2C
-#define I2C_MASTER_NUM i2c0         /*!< I2C port number for master dev */
-#define I2C_MASTER_SCL_IO (5)       /*!< GPIO number used for I2C master clock */
-#define I2C_MASTER_SDA_IO (4)       /*!< GPIO number used for I2C master data  */
-#define I2C_MASTER_FREQ_HZ (400000) /*!< I2C master clock frequency */
+#define I2C_MASTER_NUM (CONFIG_ARDUINO_I2C_HOST_NUM)
+#define I2C_MASTER_SCL_IO (CONFIG_ARDUINO_I2C_SCL)
+#define I2C_MASTER_SDA_IO (CONFIG_ARDUINO_I2C_SDA)
+#define I2C_MASTER_FREQ_HZ (CONFIG_ARDUINO_I2C_FREQ_HZ)
 
 // SPI
-#define SPI_MASTER_NUM spi0
-#define SPI_MASTER_MOSI_IO (19)
-#define SPI_MASTER_MISO_IO (16)
-#define SPI_MASTER_SCLK_IO (18)
-#define SPI_MASTER_CS_IO (17)
+#define SPI_MASTER_NUM (CONFIG_ARDUINO_SPI_HOST_NUM)
+#define SPI_MASTER_MOSI_IO (CONFIG_ARDUINO_SPI_MOSI)
+#define SPI_MASTER_MISO_IO (CONFIG_ARDUINO_SPI_MISO)
+#define SPI_MASTER_SCLK_IO (CONFIG_ARDUINO_SPI_CLK)
+#define SPI_MASTER_CS_IO (CONFIG_ARDUINO_SPI_CS0)
+#define SPI_MASTER_BAUD_RATE (CONFIG_ARDUINO_SPI_BAUD_RATE)
 
 // UART
-#define UART_MASTER_NUM uart0
-#define UART_MASTER_TX_IO (0)
-#define UART_MASTER_RX_IO (1)
+#define UART_MASTER_NUM (CONFIG_ARDUINO_UART_PORT_NUM)
+#define UART_MASTER_IRQ (CONFIG_ARDUINO_UART_IRQ)
+#define UART_MASTER_TX_IO (CONFIG_ARDUINO_UART_TXD)
+#define UART_MASTER_RX_IO (CONFIG_ARDUINO_UART_RXD)
 
 // ADC
-#define ADC_GPIO_0 (26)
-#define ADC_GPIO_1 (27)
-#define ADC_GPIO_2 (28)
+#define ADC_GPIO_0 (CONFIG_ARDUINO_ADC_GPIO_0)
+#define ADC_GPIO_1 (CONFIG_ARDUINO_ADC_GPIO_1)
+#define ADC_GPIO_2 (CONFIG_ARDUINO_ADC_GPIO_2)
 
 #ifdef __cplusplus
 }
