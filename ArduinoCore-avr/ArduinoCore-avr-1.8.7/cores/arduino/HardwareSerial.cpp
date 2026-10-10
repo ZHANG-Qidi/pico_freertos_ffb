@@ -31,7 +31,7 @@
 
 #include "Arduino.h"
 #include "HardwareSerial_private.h"
-#include "arduino_interface.h"
+#include "Arduino_interface.h"
 #include "pico/stdlib.h"
 
 // Actual interrupt handlers //////////////////////////////////////////////////////////////

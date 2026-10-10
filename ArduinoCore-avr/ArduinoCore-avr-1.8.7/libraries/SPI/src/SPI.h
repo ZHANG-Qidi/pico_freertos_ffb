@@ -16,7 +16,7 @@
 
 #include <Arduino.h>
 
-#include "arduino_interface.h"
+#include "Arduino_interface.h"
 #include "hardware/spi.h"
 
 class SPISettings {
