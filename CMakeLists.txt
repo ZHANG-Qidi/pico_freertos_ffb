@@ -3,9 +3,9 @@
 cmake_minimum_required(VERSION 3.13)
 
 if(WIN32)
-    set(FREERTOS_KERNEL_PATH "D:/HOME/workspace - pico/FreeRTOS/FreeRTOS-KernelV11.3.0" CACHE PATH "Path to FreeRTOS Kernel")
+    set(FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_LIST_DIR}/../FreeRTOS/FreeRTOS-KernelV11.3.0" CACHE PATH "Path to FreeRTOS Kernel")
 else()
-    set(FREERTOS_KERNEL_PATH "/home/grunt/workspace - pico/FreeRTOS-KernelV11.3.1" CACHE PATH "Path to FreeRTOS Kernel")
+    set(FREERTOS_KERNEL_PATH "${CMAKE_CURRENT_LIST_DIR}/../FreeRTOS/FreeRTOS-KernelV11.3.1" CACHE PATH "Path to FreeRTOS Kernel")
 endif()
 
 set(CMAKE_C_STANDARD 11)
