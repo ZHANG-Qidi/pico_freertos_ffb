@@ -30,6 +30,8 @@ target_link_libraries(hid_ffb PRIVATE
     hardware_pwm
     hardware_timer
     hardware_clocks
+    hardware_flash
+    pico_flash
 )
 
 # Example running FreeRTOS on 1 core

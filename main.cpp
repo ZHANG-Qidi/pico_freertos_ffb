@@ -122,7 +122,6 @@ void adc_task(__unused void *params) {
     }
 }
 void ffb_commander_task(__unused void *params) {
-    ffb_commander_setup();
     TickType_t last = xTaskGetTickCount();
     for (;;) {
         vTaskDelayUntil(&last, pdMS_TO_TICKS(FFB_COMMANDER_POLLING_INTERVAL));
@@ -133,6 +132,7 @@ void ffb_commander_task(__unused void *params) {
 static void do_work(async_context_t *context, async_at_time_worker_t *worker) { async_context_add_at_time_worker_in_ms(context, worker, 1); }
 async_at_time_worker_t worker_timeout = {.do_work = do_work};
 void main_task(__unused void *params) {
+    ffb_commander_setup();
     async_context_t *context = create_async_context();
     // start the worker running
     async_context_add_at_time_worker_in_ms(context, &worker_timeout, 0);
