@@ -15,6 +15,8 @@
 // FFB
 #include "adc_loop.h"
 #include "adc_setup.h"
+#include "ffb_commander_loop.h"
+#include "ffb_commander_setup.h"
 #include "ffb_loop.h"
 #include "ffb_setup.h"
 #include "foc_loop.h"
@@ -119,6 +121,14 @@ void adc_task(__unused void *params) {
         adc_loop();
     }
 }
+void ffb_commander_task(__unused void *params) {
+    ffb_commander_setup();
+    TickType_t last = xTaskGetTickCount();
+    for (;;) {
+        vTaskDelayUntil(&last, pdMS_TO_TICKS(FFB_COMMANDER_POLLING_INTERVAL));
+        ffb_commander_loop();
+    }
+}
 // async workers run in their own thread when using async_context_freertos_t with priority WORKER_TASK_PRIORITY
 static void do_work(async_context_t *context, async_at_time_worker_t *worker) { async_context_add_at_time_worker_in_ms(context, worker, 1); }
 async_at_time_worker_t worker_timeout = {.do_work = do_work};
@@ -129,12 +139,13 @@ void main_task(__unused void *params) {
 #if USE_LED
     // start the led blinking
     static_assert(configSUPPORT_DYNAMIC_ALLOCATION, "");
-    xTaskCreate(blink_task, "BlinkThread", BLINK_TASK_STACK_SIZE, NULL, BLINK_TASK_PRIORITY, NULL);
+    xTaskCreate(blink_task, "blink_task", BLINK_TASK_STACK_SIZE, NULL, BLINK_TASK_PRIORITY, NULL);
 #endif  // USE_LED
     xTaskCreate(foc_task, "foc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, &foc_task_handle);
     xTaskCreate(usb_task, "usb_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     xTaskCreate(ffb_task, "ffb_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     xTaskCreate(adc_task, "adc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
+    xTaskCreate(ffb_commander_task, "ffb_commander_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     static struct repeating_timer timer;
     add_repeating_timer_us(-FOC_LOOP_PERIOD, repeating_timer_callback, NULL, &timer);
     TickType_t last = xTaskGetTickCount();
@@ -145,7 +156,7 @@ void main_task(__unused void *params) {
 }
 void vLaunch(void) {
     static_assert(configSUPPORT_DYNAMIC_ALLOCATION, "");
-    xTaskCreate(main_task, "MainThread", MAIN_TASK_STACK_SIZE, NULL, MAIN_TASK_PRIORITY, NULL);
+    xTaskCreate(main_task, "main_task", MAIN_TASK_STACK_SIZE, NULL, MAIN_TASK_PRIORITY, NULL);
     /* Start the tasks and timer running. */
     vTaskStartScheduler();
 }

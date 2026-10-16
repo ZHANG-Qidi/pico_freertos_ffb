@@ -2,6 +2,7 @@
 
 #include "SimpleFOC.h"
 #include "esp_log.h"
+#include "ffb_commander_setup.h"
 #include "ffb_loop.h"
 #include "ffb_setup.h"
 #include "foc_setup.h"
@@ -20,13 +21,14 @@ void foc_loop(void) {
     float damping = damper * motor.shaft_velocity / DAMPING_MAX_VELOCITY;
     float torque_ratio = constant_force - damping;
     float angle = motor.shaft_angle;
-    if (angle < -WHEEL_HALF) {
-        float x = (-WHEEL_HALF - angle) / STOP_ZONE;
+    const float wheel_half = ffb_commander_wheel_half_range_rad();
+    if (angle < -wheel_half) {
+        float x = (-wheel_half - angle) / STOP_ZONE;
         x = x > 1.0f ? 1.0f : x;
         float stop_force = x * x * STOP_FORCE;
         torque_ratio += stop_force;
-    } else if (angle > WHEEL_HALF) {
-        float x = (angle - WHEEL_HALF) / STOP_ZONE;
+    } else if (angle > wheel_half) {
+        float x = (angle - wheel_half) / STOP_ZONE;
         x = x > 1.0f ? 1.0f : x;
         float stop_force = x * x * STOP_FORCE;
         torque_ratio -= stop_force;

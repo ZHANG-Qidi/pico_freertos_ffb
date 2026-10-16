@@ -2,6 +2,7 @@
 
 #include "adc_loop.h"
 #include "esp_log.h"
+#include "ffb_commander_setup.h"
 #include "ffb_setup.h"
 #include "foc_loop.h"
 #include "hidReportDesc.h"
@@ -103,8 +104,9 @@ void usb_loop(void) {
     };
     float wheel_rad;
     foc_output(&wheel_rad);
-    float wheel_rad_clamped = wheel_rad > WHEEL_HALF ? WHEEL_HALF : (wheel_rad < -WHEEL_HALF ? -WHEEL_HALF : wheel_rad);
-    joy.axis_x = JOYSTIC_AXIS_LOGICAL_MID + wheel_rad_clamped / WHEEL_HALF * JOYSTIC_AXIS_LOGICAL_MID;
+    const float wheel_half = ffb_commander_wheel_half_range_rad();
+    float wheel_rad_clamped = wheel_rad > wheel_half ? wheel_half : (wheel_rad < -wheel_half ? -wheel_half : wheel_rad);
+    joy.axis_x = JOYSTIC_AXIS_LOGICAL_MID + wheel_rad_clamped / wheel_half * JOYSTIC_AXIS_LOGICAL_MID;
     joy.axis_rx = JOYSTIC_AXIS_LOGICAL_MAX * (1.0f - adc_output(0));
     joy.axis_ry = JOYSTIC_AXIS_LOGICAL_MAX * adc_output(1);
     joy.axis_rz = JOYSTIC_AXIS_LOGICAL_MAX * adc_output(2);
