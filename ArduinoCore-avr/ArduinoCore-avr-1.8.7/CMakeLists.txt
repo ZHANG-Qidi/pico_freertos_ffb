@@ -12,6 +12,7 @@ target_include_directories(arduino_core PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/libraries/Wire/src
     ${CMAKE_CURRENT_LIST_DIR}/libraries/SPI/src
     ${CMAKE_CURRENT_LIST_DIR}/libraries/USB/src
+    ${CMAKE_CURRENT_LIST_DIR}/libraries/EEPROM/src
     ${CMAKE_SOURCE_DIR}
 )
 
@@ -34,6 +35,8 @@ target_link_libraries(arduino_core PRIVATE
     hardware_clocks
     hardware_pio
     hardware_adc
+    hardware_flash
+    pico_flash
 )
 
 # Example running FreeRTOS on 1 core
@@ -52,3 +55,20 @@ target_compile_definitions(arduino_core PRIVATE
 # Generate PIO header
 pico_generate_pio_header(arduino_core ${CMAKE_CURRENT_LIST_DIR}/cores/arduino/svpwm.pio)
 pico_generate_pio_header(arduino_core ${CMAKE_CURRENT_LIST_DIR}/cores/arduino/pwm.pio)
+
+# Call after creating the executable that uses this compatibility layer.
+function(arduino_configure_eeprom TARGET)
+    # Reserve the last 4 KiB sector of the Pico 2's 4 MiB flash for EEPROM.
+    # Override only the linker region; PICO_FLASH_SIZE_BYTES retains physical capacity.
+    set(PICO_EEPROM_FLASH_OFFSET 0x3FF000)
+    set(EEPROM_FLASH_LINK_DIR "${CMAKE_CURRENT_BINARY_DIR}/eeprom_flash")
+    file(MAKE_DIRECTORY "${EEPROM_FLASH_LINK_DIR}")
+    file(WRITE "${EEPROM_FLASH_LINK_DIR}/pico_flash_region.ld"
+        "FLASH(rx) : ORIGIN = 0x10000000, LENGTH = ${PICO_EEPROM_FLASH_OFFSET}\n")
+    pico_add_linker_script_override_path(${TARGET} "${EEPROM_FLASH_LINK_DIR}"
+        FILES pico_flash_region.ld)
+    target_compile_definitions(arduino_core PRIVATE PICO_EEPROM_FLASH_OFFSET=${PICO_EEPROM_FLASH_OFFSET})
+
+    # The current single-core FreeRTOS setup runs on core 0; core 1 is unused.
+    target_compile_definitions(pico_flash INTERFACE PICO_FLASH_ASSUME_CORE1_SAFE=1)
+endfunction()

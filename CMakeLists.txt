@@ -25,7 +25,7 @@ set(sdkVersion 2.3.1)
 set(toolchainVersion 14_2_Rel1)
 set(picotoolVersion 2.3.1)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
-if (EXISTS ${picoVscode})
+if(EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
@@ -49,19 +49,7 @@ add_executable(pico_freertos_ffb
     main.cpp
 )
 
-# Reserve the last two 4 KiB sectors of the Pico 2's 4 MiB flash for parameters.
-# Override only the linker region; PICO_FLASH_SIZE_BYTES retains physical capacity.
-set(FFB_PARAMETER_FLASH_OFFSET 0x3FE000)
-set(FFB_FLASH_LINK_DIR "${CMAKE_CURRENT_BINARY_DIR}/ffb_flash")
-file(MAKE_DIRECTORY "${FFB_FLASH_LINK_DIR}")
-file(WRITE "${FFB_FLASH_LINK_DIR}/pico_flash_region.ld"
-    "FLASH(rx) : ORIGIN = 0x10000000, LENGTH = ${FFB_PARAMETER_FLASH_OFFSET}\n")
-pico_add_linker_script_override_path(pico_freertos_ffb "${FFB_FLASH_LINK_DIR}"
-    FILES pico_flash_region.ld)
-target_compile_definitions(hid_ffb PRIVATE FFB_PARAMETER_FLASH_OFFSET=${FFB_PARAMETER_FLASH_OFFSET})
-
-# The current single-core FreeRTOS setup runs on core 0; core 1 is unused.
-target_compile_definitions(pico_flash INTERFACE PICO_FLASH_ASSUME_CORE1_SAFE=1)
+arduino_configure_eeprom(pico_freertos_ffb)
 
 target_include_directories(pico_freertos_ffb PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
