@@ -3,4 +3,4 @@ CompileFlags:
     Add: [-Wno-pp-hash-error]
 Diagnostics:
     UnusedIncludes: None
-    Suppress: ["pp_hash_error"]
+    Suppress: ["pp_file_not_found", "pp_hash_error"]

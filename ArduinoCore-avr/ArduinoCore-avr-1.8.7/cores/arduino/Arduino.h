@@ -104,6 +104,7 @@ void loop(void);
 #include "HardwareSerial.h"
 #include "WCharacter.h"
 #include "WString.h"
+#include "SerialUSB.h"
 #endif
 
 #endif

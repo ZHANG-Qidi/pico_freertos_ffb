@@ -34,13 +34,13 @@ void foc_setup(void) {
     // set torque control loop to be used
     motor.torque_controller = TorqueControlType::voltage;
     // use monitoring with serial
-    Serial.begin(COMMANDER_BAUD_RATE);
+    SerialUSB.begin(COMMANDER_BAUD_RATE);
     // comment out if not needed
-    motor.useMonitoring(Serial);
+    motor.useMonitoring(SerialUSB);
     // initialize motor
     motor.init();
     // align sensor and start FOC
     motor.initFOC();
-    Serial.println(F("Motor ready."));
+    SerialUSB.println(F("Motor ready."));
     delay(1000);
 }

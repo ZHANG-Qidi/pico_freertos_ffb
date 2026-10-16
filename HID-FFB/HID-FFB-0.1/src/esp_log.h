@@ -8,7 +8,7 @@ extern "C" {
     do {                                                                                                    \
         char _log_buf[512];                                                                                 \
         snprintf(_log_buf, sizeof(_log_buf), "[I] (%lu) %s: " format "\r\n", millis(), tag, ##__VA_ARGS__); \
-        Serial.print(_log_buf);                                                                             \
+        SerialUSB.print(_log_buf);                                                                          \
     } while (0)
 #ifdef __cplusplus
 }
