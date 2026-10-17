@@ -65,8 +65,20 @@ function(arduino_configure_eeprom TARGET)
     file(MAKE_DIRECTORY "${EEPROM_FLASH_LINK_DIR}")
     file(WRITE "${EEPROM_FLASH_LINK_DIR}/pico_flash_region.ld"
         "FLASH(rx) : ORIGIN = 0x10000000, LENGTH = ${PICO_EEPROM_FLASH_OFFSET}\n")
-    pico_add_linker_script_override_path(${TARGET} "${EEPROM_FLASH_LINK_DIR}"
-        FILES pico_flash_region.ld)
+    if(COMMAND pico_add_linker_script_override_path)
+        pico_add_linker_script_override_path(${TARGET} "${EEPROM_FLASH_LINK_DIR}"
+            FILES pico_flash_region.ld)
+    else()
+        # SDK 2.2.0: generate a linker script with an explicit EEPROM region include.
+        set(EEPROM_LINKER_SOURCE "${PICO_SDK_PATH}/src/rp2_common/pico_crt0/${PICO_CHIP}/memmap_default.ld")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${EEPROM_LINKER_SOURCE}")
+        file(READ "${EEPROM_LINKER_SOURCE}" EEPROM_LINKER_SCRIPT)
+        string(REPLACE "INCLUDE \"pico_flash_region.ld\""
+            "INCLUDE \"${EEPROM_FLASH_LINK_DIR}/pico_flash_region.ld\""
+            EEPROM_LINKER_SCRIPT "${EEPROM_LINKER_SCRIPT}")
+        file(WRITE "${EEPROM_FLASH_LINK_DIR}/memmap_default.ld" "${EEPROM_LINKER_SCRIPT}")
+        pico_set_linker_script(${TARGET} "${EEPROM_FLASH_LINK_DIR}/memmap_default.ld")
+    endif()
     target_compile_definitions(arduino_core PRIVATE PICO_EEPROM_FLASH_OFFSET=${PICO_EEPROM_FLASH_OFFSET})
 
     # The current single-core FreeRTOS setup runs on core 0; core 1 is unused.
