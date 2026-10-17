@@ -24,7 +24,7 @@ struct Parameters {
     float wheel_range_turns;
 };
 
-static void load_parameters(void) {
+static bool load_parameters(void) {
     bool blank = true;
     for (size_t i = 0; i < sizeof(Parameters); ++i) {
         if (EEPROM.read(k_parameter_address + i) != 0xff) {
@@ -32,7 +32,7 @@ static void load_parameters(void) {
             break;
         }
     }
-    if (blank) return;  // Retain FFB_config.h defaults on first use.
+    if (blank) return false;  // Retain current values when EEPROM is empty.
 
     Parameters parameters;
     EEPROM.get(k_parameter_address, parameters);
@@ -40,12 +40,26 @@ static void load_parameters(void) {
     g_damping_gain = parameters.damping_gain;
     g_damping_dr2_gain = parameters.damping_dr2_gain;
     g_wheel_range_turns = parameters.wheel_range_turns;
+    return true;
 }
 
 static void doConstantGain(char *cmd) { ffb_commander.scalar(&g_constant_gain, cmd); }
 static void doDampingGain(char *cmd) { ffb_commander.scalar(&g_damping_gain, cmd); }
 static void doDampingDr2Gain(char *cmd) { ffb_commander.scalar(&g_damping_dr2_gain, cmd); }
 static void doWheelRange(char *cmd) { ffb_commander.scalar(&g_wheel_range_turns, cmd); }
+static void doLoad(char *) {
+    const bool loaded = load_parameters();
+    if (ffb_commander.verbose != ffb::nothing) {
+        ffb_commander.com_port->println(loaded ? F("loaded") : F("empty"));
+    }
+}
+static void doSave(char *) {
+    const Parameters parameters{g_constant_gain, g_damping_gain, g_damping_dr2_gain, g_wheel_range_turns};
+    EEPROM.put(k_parameter_address, parameters);
+    if (ffb_commander.verbose != ffb::nothing) {
+        ffb_commander.com_port->println(F("saved"));
+    }
+}
 static void doLoadDefaults(char *) {
     g_constant_gain = CONFIG_FFB_CONSTANT_FORCE_GAIN;
     g_damping_gain = CONFIG_FFB_DAMPING_GAIN;
@@ -56,14 +70,6 @@ static void doLoadDefaults(char *) {
     }
 }
 
-static void doSave(char *) {
-    const Parameters parameters{g_constant_gain, g_damping_gain, g_damping_dr2_gain, g_wheel_range_turns};
-    EEPROM.put(k_parameter_address, parameters);
-    if (ffb_commander.verbose != ffb::nothing) {
-        ffb_commander.com_port->println(F("saved"));
-    }
-}
-
 void ffb_commander_setup(void) {
     load_parameters();
     SerialUSB.begin(CONFIG_FFB_COMMANDER_BAUD_RATE);
@@ -71,7 +77,8 @@ void ffb_commander_setup(void) {
     ffb_commander.add('D', doDampingGain, "damping gain");
     ffb_commander.add('R', doDampingDr2Gain, "DR2 damping gain");
     ffb_commander.add('A', doWheelRange, "wheel range (turns)");
-    ffb_commander.add('L', doLoadDefaults, "load defaults");
+    ffb_commander.add('L', doLoad, "load parameters");
+    ffb_commander.add('F', doLoadDefaults, "load defaults");
     ffb_commander.add('S', doSave, "save parameters");
 }
 
