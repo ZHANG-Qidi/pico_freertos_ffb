@@ -1,5 +1,9 @@
 #include "SerialUSB.h"
 
+#include <string.h>
+
+#include "FreeRTOS.h"
+#include "task.h"
 #include "tusb.h"
 
 #ifndef DISABLE_USB_SERIAL
@@ -59,57 +63,66 @@ int _SerialUSB::available() {
 }
 
 int _SerialUSB::availableForWrite() {
-    if (!_running) {
+    if (!_running || !tud_cdc_connected()) {
         return 0;
     }
 
-    return tud_cdc_write_available();
+    taskENTER_CRITICAL();
+    const size_t space = SERIAL_USB_TX_BUFFER_SIZE - _tx_count;
+    taskEXIT_CRITICAL();
+    return space;
 }
 
 void _SerialUSB::flush() {
-    if (!_running) {
-        return;
-    }
-
-    tud_cdc_write_flush();
+    // Transmission is asynchronous; the transmit task flushes without waiting.
 }
 
 size_t _SerialUSB::write(uint8_t c) { return write(&c, 1); }
 
-#include "device/usbd_pvt.h"
-
 size_t _SerialUSB::write(const uint8_t *buf, size_t size) {
-    if (!_running) {
+    if (!_running || !buf || !size || !tud_cdc_connected()) {
         return 0;
     }
 
-    if (!connected()) {
-        return 0;
+    taskENTER_CRITICAL();
+    const size_t space = SERIAL_USB_TX_BUFFER_SIZE - _tx_count;
+    const size_t accepted = size < space ? size : space;
+    const size_t contiguous = SERIAL_USB_TX_BUFFER_SIZE - _tx_head;
+    const size_t first = accepted < contiguous ? accepted : contiguous;
+    memcpy(_tx_buffer + _tx_head, buf, first);
+    memcpy(_tx_buffer, buf + first, accepted - first);
+    _tx_head = (_tx_head + accepted) % SERIAL_USB_TX_BUFFER_SIZE;
+    _tx_count += accepted;
+    taskEXIT_CRITICAL();
+    return accepted;
+}
+
+void _SerialUSB::transmit() {
+    if (!_running || !tud_cdc_connected()) {
+        taskENTER_CRITICAL();
+        _tx_head = _tx_tail = _tx_count = 0;
+        taskEXIT_CRITICAL();
+        tud_cdc_write_clear();
+        return;
     }
-    usbd_int_set(false);
-    size_t to_send = size, so_far = 0;
-    while (to_send) {
-        size_t space = tud_cdc_write_available();
-        if (!space) {
-            usbd_int_set(true);
-            tud_cdc_write_flush();
-            continue;
-        }
-        if (space > to_send) {
-            space = to_send;
-        }
-        size_t sent = tud_cdc_write(buf + so_far, space);
-        usbd_int_set(true);
-        if (sent) {
-            so_far += sent;
-            to_send -= sent;
-            tud_cdc_write_flush();
-        } else {
-            size = so_far;
-            break;
-        }
+
+    const size_t space = tud_cdc_write_available();
+    taskENTER_CRITICAL();
+    const size_t contiguous = SERIAL_USB_TX_BUFFER_SIZE - _tx_tail;
+    size_t count = _tx_count < contiguous ? _tx_count : contiguous;
+    if (count > space) count = space;
+    const size_t tail = _tx_tail;
+    taskEXIT_CRITICAL();
+
+    // Only this task consumes data; writers cannot overwrite these queued bytes.
+    if (count) {
+        const size_t sent = tud_cdc_write(_tx_buffer + tail, count);
+        taskENTER_CRITICAL();
+        _tx_tail = (_tx_tail + sent) % SERIAL_USB_TX_BUFFER_SIZE;
+        _tx_count -= sent;
+        taskEXIT_CRITICAL();
     }
-    return size;
+    tud_cdc_write_flush();
 }
 
 _SerialUSB::operator bool() {

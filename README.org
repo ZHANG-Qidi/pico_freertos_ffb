@@ -47,6 +47,8 @@ TinyUSB 负责 USB Device 协议栈和 HID 通信基础；HID-FFB 负责设备�
 
 设备提供 HID + CDC 复合接口，通过 SerialUSB 输出日志并接收参数命令，Commander 由独立 FreeRTOS 任务处理。命令以 LF（\n）结尾，单独发送字母查询，追加数值设置，例如 C0.5。
 
+日志采用异步发送，避免阻塞 USB 力反馈处理。
+
 | 命令 | 参数 |
 |------+------|
 | C | 恒定力增益 |

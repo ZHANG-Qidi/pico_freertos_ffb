@@ -19,6 +19,10 @@
 #include <Arduino.h>
 #include <stdarg.h>
 
+#ifndef SERIAL_USB_TX_BUFFER_SIZE
+#define SERIAL_USB_TX_BUFFER_SIZE 512
+#endif
+
 class _SerialUSB : public Stream {
    public:
     _SerialUSB() {}
@@ -39,6 +43,9 @@ class _SerialUSB : public Stream {
     using Print::write;
     operator bool();
 
+    // Call periodically from a single task to advance queued USB transmission.
+    void transmit();
+
     uint32_t baud() { return _bps; }
     uint8_t stopbits() { return _stop; }
     uint8_t paritytype() { return _parity; }
@@ -57,6 +64,10 @@ class _SerialUSB : public Stream {
     bool _running = false;
     bool ignore_dtr = false;
     bool connected();
+    uint8_t _tx_buffer[SERIAL_USB_TX_BUFFER_SIZE];
+    size_t _tx_head = 0;
+    size_t _tx_tail = 0;
+    size_t _tx_count = 0;
 };
 
 extern _SerialUSB SerialUSB;
