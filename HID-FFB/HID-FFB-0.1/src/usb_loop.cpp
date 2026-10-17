@@ -107,8 +107,7 @@ void usb_loop(void) {
     const float wheel_half = ffb_commander_wheel_half_range_rad();
     float wheel_rad_clamped = wheel_rad > wheel_half ? wheel_half : (wheel_rad < -wheel_half ? -wheel_half : wheel_rad);
     joy.axis_x = JOYSTIC_AXIS_LOGICAL_MID + wheel_rad_clamped / wheel_half * JOYSTIC_AXIS_LOGICAL_MID;
-    // joy.axis_rx = JOYSTIC_AXIS_LOGICAL_MAX * (1.0f - adc_output(0));
-    joy.axis_rx = JOYSTIC_AXIS_LOGICAL_MAX * adc_output(0);
+    joy.axis_rx = JOYSTIC_AXIS_LOGICAL_MAX * (1.0f - adc_output(0));
     joy.axis_ry = JOYSTIC_AXIS_LOGICAL_MAX * adc_output(1);
     joy.axis_rz = JOYSTIC_AXIS_LOGICAL_MAX * adc_output(2);
     tud_hid_report(TLID, &joy, sizeof(hid_joystick_input_t));
