@@ -68,7 +68,9 @@ int _SerialUSB::availableForWrite() {
     }
 
     taskENTER_CRITICAL();
-    const size_t space = SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_count;
+    const size_t head = _tx_buffer_head;
+    const size_t tail = _tx_buffer_tail;
+    const size_t space = head >= tail ? SERIAL_USB_TX_BUFFER_SIZE - 1 - head + tail : tail - head - 1;
     taskEXIT_CRITICAL();
     return space;
 }
@@ -85,63 +87,50 @@ size_t _SerialUSB::write(const uint8_t *buf, size_t size) {
     }
 
     taskENTER_CRITICAL();
-    const size_t space = SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_count;
+    size_t direct = 0;
+    if (_tx_buffer_head == _tx_buffer_tail) {
+        const size_t available = tud_cdc_write_available();
+        direct = tud_cdc_write(buf, size < available ? size : available);
+    }
+    buf += direct;
+    size -= direct;
+    const size_t head = _tx_buffer_head;
+    const size_t tail = _tx_buffer_tail;
+    const size_t space = head >= tail ? SERIAL_USB_TX_BUFFER_SIZE - 1 - head + tail : tail - head - 1;
     const size_t accepted = size < space ? size : space;
     const size_t contiguous = SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_head;
     const size_t first = accepted < contiguous ? accepted : contiguous;
     memcpy(_tx_buffer + _tx_buffer_head, buf, first);
     memcpy(_tx_buffer, buf + first, accepted - first);
     _tx_buffer_head = (_tx_buffer_head + accepted) % SERIAL_USB_TX_BUFFER_SIZE;
-    _tx_buffer_count += accepted;
-    const bool start = accepted && !_tx_active;
-    if (start) _tx_active = true;
     taskEXIT_CRITICAL();
-    if (start) transmit();
-    return accepted;
+    if (direct) tud_cdc_write_flush();
+    return direct + accepted;
 }
 
 bool _SerialUSB::checkTxConnection() {
     if (_running && tud_cdc_connected()) return true;
 
     taskENTER_CRITICAL();
-    _tx_buffer_head = _tx_buffer_tail = _tx_buffer_count = 0;
-    _tx_active = false;
+    _tx_buffer_head = _tx_buffer_tail = 0;
     taskEXIT_CRITICAL();
     tud_cdc_write_clear();
     return false;
 }
 
-void _SerialUSB::sendNext(bool flush) {
+void _SerialUSB::on_cdc_tx_complete() {
     if (!checkTxConnection()) return;
 
-    const size_t space = tud_cdc_write_available();
-    taskENTER_CRITICAL();
-    if (!_tx_buffer_count) {
-        _tx_active = false;
-        taskEXIT_CRITICAL();
-        return;
-    }
-    const size_t contiguous = SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_tail;
-    size_t count = _tx_buffer_count < contiguous ? _tx_buffer_count : contiguous;
-    if (count > space) count = space;
-    const size_t tail = _tx_buffer_tail;
-    taskEXIT_CRITICAL();
-
-    if (count) {
-        const size_t sent = tud_cdc_write(_tx_buffer + tail, count);
-        taskENTER_CRITICAL();
-        _tx_buffer_tail = (_tx_buffer_tail + sent) % SERIAL_USB_TX_BUFFER_SIZE;
-        _tx_buffer_count -= sent;
-        taskEXIT_CRITICAL();
-    }
-    if (flush) tud_cdc_write_flush();
-}
-
-void _SerialUSB::transmit() { sendNext(true); }
-
-void _SerialUSB::on_cdc_tx_complete() {
     // TinyUSB flushes its FIFO after this callback returns.
-    sendNext(false);
+    taskENTER_CRITICAL();
+    if (_tx_buffer_head != _tx_buffer_tail) {
+        const size_t space = tud_cdc_write_available();
+        size_t count = _tx_buffer_head > _tx_buffer_tail ? _tx_buffer_head - _tx_buffer_tail : SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_tail;
+        count = count > space ? space : count;
+        const size_t sent = tud_cdc_write(_tx_buffer + _tx_buffer_tail, count);
+        _tx_buffer_tail = (_tx_buffer_tail + sent) % SERIAL_USB_TX_BUFFER_SIZE;
+    }
+    taskEXIT_CRITICAL();
 }
 
 _SerialUSB::operator bool() {
