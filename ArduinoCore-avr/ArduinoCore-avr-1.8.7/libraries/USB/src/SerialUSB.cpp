@@ -100,15 +100,19 @@ size_t _SerialUSB::write(const uint8_t *buf, size_t size) {
     return accepted;
 }
 
+bool _SerialUSB::checkTxConnection() {
+    if (_running && tud_cdc_connected()) return true;
+
+    taskENTER_CRITICAL();
+    _tx_buffer_head = _tx_buffer_tail = _tx_buffer_count = 0;
+    _tx_active = false;
+    taskEXIT_CRITICAL();
+    tud_cdc_write_clear();
+    return false;
+}
+
 void _SerialUSB::sendNext(bool flush) {
-    if (!_running || !tud_cdc_connected()) {
-        taskENTER_CRITICAL();
-        _tx_buffer_head = _tx_buffer_tail = _tx_buffer_count = 0;
-        _tx_active = false;
-        taskEXIT_CRITICAL();
-        tud_cdc_write_clear();
-        return;
-    }
+    if (!checkTxConnection()) return;
 
     const size_t space = tud_cdc_write_available();
     taskENTER_CRITICAL();
@@ -173,7 +177,7 @@ extern "C" void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
     (void)itf;
     _SerialUSB::_dtr = dtr ? true : false;
     _SerialUSB::_rts = rts ? true : false;
-    if (!dtr) SerialUSB.transmit();
+    if (!dtr) SerialUSB.checkTxConnection();
     CheckSerialReset();
 }
 

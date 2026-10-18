@@ -37,7 +37,7 @@ void tud_mount_cb(void) { blink_interval_ms_usb_status = BLINK_MOUNTED; }
 // Invoked when device is unmounted
 void tud_umount_cb(void) {
     blink_interval_ms_usb_status = BLINK_NOT_MOUNTED;
-    SerialUSB.transmit();
+    SerialUSB.checkTxConnection();
 }
 // Invoked when usb bus is suspended
 // remote_wakeup_en : if host allow us  to perform remote wakeup

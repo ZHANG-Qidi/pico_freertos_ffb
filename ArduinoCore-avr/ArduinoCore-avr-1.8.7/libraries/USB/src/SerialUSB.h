@@ -43,6 +43,8 @@ class _SerialUSB : public Stream {
     using Print::write;
     operator bool();
 
+    // Clear queued TX data and return false when CDC is disconnected.
+    bool checkTxConnection();
     // Start a transfer when the ring becomes nonempty; the CDC callback continues it.
     void transmit();
     void on_cdc_tx_complete();
