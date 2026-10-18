@@ -19,6 +19,10 @@
 #include <Arduino.h>
 #include <stdarg.h>
 
+#ifndef SERIAL_USB_RX_BUFFER_SIZE
+#define SERIAL_USB_RX_BUFFER_SIZE 512
+#endif
+
 #ifndef SERIAL_USB_TX_BUFFER_SIZE
 #define SERIAL_USB_TX_BUFFER_SIZE 512
 #endif
@@ -43,8 +47,9 @@ class _SerialUSB : public Stream {
     using Print::write;
     operator bool();
 
-    // Clear queued TX data and return false when CDC is disconnected.
-    bool checkTxConnection();
+    void clearTx();
+    void clearRx();
+    void on_cdc_rx_complete();
     void on_cdc_tx_complete();
 
     uint32_t baud() { return _bps; }
@@ -65,6 +70,9 @@ class _SerialUSB : public Stream {
     bool _running = false;
     bool ignore_dtr = false;
     bool connected();
+    uint8_t _rx_buffer[SERIAL_USB_RX_BUFFER_SIZE];
+    size_t _rx_buffer_head = 0;
+    size_t _rx_buffer_tail = 0;
     uint8_t _tx_buffer[SERIAL_USB_TX_BUFFER_SIZE];
     size_t _tx_buffer_head = 0;
     size_t _tx_buffer_tail = 0;
