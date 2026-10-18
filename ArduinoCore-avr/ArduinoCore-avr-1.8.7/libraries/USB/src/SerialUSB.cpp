@@ -68,13 +68,13 @@ int _SerialUSB::availableForWrite() {
     }
 
     taskENTER_CRITICAL();
-    const size_t space = SERIAL_USB_TX_BUFFER_SIZE - _tx_count;
+    const size_t space = SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_count;
     taskEXIT_CRITICAL();
     return space;
 }
 
 void _SerialUSB::flush() {
-    // Transmission is asynchronous; the transmit task flushes without waiting.
+    // Transmission is asynchronous; queued data is sent without waiting.
 }
 
 size_t _SerialUSB::write(uint8_t c) { return write(&c, 1); }
@@ -85,22 +85,26 @@ size_t _SerialUSB::write(const uint8_t *buf, size_t size) {
     }
 
     taskENTER_CRITICAL();
-    const size_t space = SERIAL_USB_TX_BUFFER_SIZE - _tx_count;
+    const size_t space = SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_count;
     const size_t accepted = size < space ? size : space;
-    const size_t contiguous = SERIAL_USB_TX_BUFFER_SIZE - _tx_head;
+    const size_t contiguous = SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_head;
     const size_t first = accepted < contiguous ? accepted : contiguous;
-    memcpy(_tx_buffer + _tx_head, buf, first);
+    memcpy(_tx_buffer + _tx_buffer_head, buf, first);
     memcpy(_tx_buffer, buf + first, accepted - first);
-    _tx_head = (_tx_head + accepted) % SERIAL_USB_TX_BUFFER_SIZE;
-    _tx_count += accepted;
+    _tx_buffer_head = (_tx_buffer_head + accepted) % SERIAL_USB_TX_BUFFER_SIZE;
+    _tx_buffer_count += accepted;
+    const bool start = accepted && !_tx_active;
+    if (start) _tx_active = true;
     taskEXIT_CRITICAL();
+    if (start) transmit();
     return accepted;
 }
 
-void _SerialUSB::transmit() {
+void _SerialUSB::sendNext(bool flush) {
     if (!_running || !tud_cdc_connected()) {
         taskENTER_CRITICAL();
-        _tx_head = _tx_tail = _tx_count = 0;
+        _tx_buffer_head = _tx_buffer_tail = _tx_buffer_count = 0;
+        _tx_active = false;
         taskEXIT_CRITICAL();
         tud_cdc_write_clear();
         return;
@@ -108,21 +112,32 @@ void _SerialUSB::transmit() {
 
     const size_t space = tud_cdc_write_available();
     taskENTER_CRITICAL();
-    const size_t contiguous = SERIAL_USB_TX_BUFFER_SIZE - _tx_tail;
-    size_t count = _tx_count < contiguous ? _tx_count : contiguous;
+    if (!_tx_buffer_count) {
+        _tx_active = false;
+        taskEXIT_CRITICAL();
+        return;
+    }
+    const size_t contiguous = SERIAL_USB_TX_BUFFER_SIZE - _tx_buffer_tail;
+    size_t count = _tx_buffer_count < contiguous ? _tx_buffer_count : contiguous;
     if (count > space) count = space;
-    const size_t tail = _tx_tail;
+    const size_t tail = _tx_buffer_tail;
     taskEXIT_CRITICAL();
 
-    // Only this task consumes data; writers cannot overwrite these queued bytes.
     if (count) {
         const size_t sent = tud_cdc_write(_tx_buffer + tail, count);
         taskENTER_CRITICAL();
-        _tx_tail = (_tx_tail + sent) % SERIAL_USB_TX_BUFFER_SIZE;
-        _tx_count -= sent;
+        _tx_buffer_tail = (_tx_buffer_tail + sent) % SERIAL_USB_TX_BUFFER_SIZE;
+        _tx_buffer_count -= sent;
         taskEXIT_CRITICAL();
     }
-    tud_cdc_write_flush();
+    if (flush) tud_cdc_write_flush();
+}
+
+void _SerialUSB::transmit() { sendNext(true); }
+
+void _SerialUSB::on_cdc_tx_complete() {
+    // TinyUSB flushes its FIFO after this callback returns.
+    sendNext(false);
 }
 
 _SerialUSB::operator bool() {
@@ -158,6 +173,7 @@ extern "C" void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
     (void)itf;
     _SerialUSB::_dtr = dtr ? true : false;
     _SerialUSB::_rts = rts ? true : false;
+    if (!dtr) SerialUSB.transmit();
     CheckSerialReset();
 }
 
@@ -168,6 +184,10 @@ extern "C" void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *p_l
     _SerialUSB::_stop = p_line_coding->stop_bits;
     _SerialUSB::_bits = p_line_coding->data_bits;
     CheckSerialReset();
+}
+
+extern "C" void tud_cdc_tx_complete_cb(uint8_t itf) {
+    if (itf == 0) SerialUSB.on_cdc_tx_complete();
 }
 
 _SerialUSB SerialUSB;

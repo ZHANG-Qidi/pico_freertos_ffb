@@ -36,8 +36,6 @@
 #endif
 // Delay between led blinking
 #define LED_DELAY_MS 200
-// Period of the USB CDC transmit task.
-#define USB_CDC_TX_INTERVAL_MS 1
 // Priorities of our threads - higher numbers are higher priority
 #define MAIN_TASK_PRIORITY (tskIDLE_PRIORITY + osPriorityBelowNormal)
 #define BLINK_TASK_PRIORITY (tskIDLE_PRIORITY + osPriorityLow)
@@ -110,13 +108,6 @@ void usb_task(__unused void *params) {
         usb_loop();
     }
 }
-void usb_cdc_tx_task(__unused void *params) {
-    TickType_t last = xTaskGetTickCount();
-    for (;;) {
-        vTaskDelayUntil(&last, pdMS_TO_TICKS(USB_CDC_TX_INTERVAL_MS));
-        SerialUSB.transmit();
-    }
-}
 void ffb_task(__unused void *params) {
     TickType_t last = xTaskGetTickCount();
     for (;;) {
@@ -153,7 +144,6 @@ void main_task(__unused void *params) {
 #endif  // USE_LED
     xTaskCreate(foc_task, "foc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, &foc_task_handle);
     xTaskCreate(usb_task, "usb_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
-    xTaskCreate(usb_cdc_tx_task, "usb_cdc_tx_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     xTaskCreate(ffb_task, "ffb_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     xTaskCreate(adc_task, "adc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     xTaskCreate(ffb_commander_task, "ffb_commander_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);

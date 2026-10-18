@@ -43,8 +43,9 @@ class _SerialUSB : public Stream {
     using Print::write;
     operator bool();
 
-    // Call periodically from a single task to advance queued USB transmission.
+    // Start a transfer when the ring becomes nonempty; the CDC callback continues it.
     void transmit();
+    void on_cdc_tx_complete();
 
     uint32_t baud() { return _bps; }
     uint8_t stopbits() { return _stop; }
@@ -64,10 +65,12 @@ class _SerialUSB : public Stream {
     bool _running = false;
     bool ignore_dtr = false;
     bool connected();
+    void sendNext(bool flush);
+    bool _tx_active = false;
     uint8_t _tx_buffer[SERIAL_USB_TX_BUFFER_SIZE];
-    size_t _tx_head = 0;
-    size_t _tx_tail = 0;
-    size_t _tx_count = 0;
+    size_t _tx_buffer_head = 0;
+    size_t _tx_buffer_tail = 0;
+    size_t _tx_buffer_count = 0;
 };
 
 extern _SerialUSB SerialUSB;
