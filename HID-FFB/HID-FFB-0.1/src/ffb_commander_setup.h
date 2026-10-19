@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 #include "ffb_commander.h"
 
-extern ffb::Commander ffb_commander;
+extern ffb::Commander g_ffb_commander;
 
 extern "C" {
 #endif
@@ -16,6 +16,8 @@ void ffb_commander_setup(void);
 float ffb_commander_constant_gain(void);
 float ffb_commander_damping_gain(void);
 float ffb_commander_damping_dr2_gain(void);
+float ffb_commander_min_damping(void);
+float ffb_commander_endstop_force(void);
 // Convert Commander total turns to the single-sided range used by FOC and USB.
 float ffb_commander_wheel_half_range_rad(void);
 

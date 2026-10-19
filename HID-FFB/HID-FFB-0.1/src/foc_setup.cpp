@@ -5,42 +5,42 @@
 // magnetic sensor
 #if defined(CONFIG_FFB_MagneticSensorSPI)
 // magnetic sensor instance - SPI
-MagneticSensorSPI sensor = MagneticSensorSPI(AS5147_SPI, SPI_MASTER_CS_IO);
+MagneticSensorSPI g_sensor = MagneticSensorSPI(AS5147_SPI, SPI_MASTER_CS_IO);
 #endif
 // #define CONFIG_FFB_MagneticSensorIIC
 #if defined(CONFIG_FFB_MagneticSensorIIC)
 // magnetic sensor instance - I2C
-MagneticSensorI2C sensor = MagneticSensorI2C(AS5600_I2C);
+MagneticSensorI2C g_sensor = MagneticSensorI2C(AS5600_I2C);
 #endif
 // BLDC motor & driver instance
-BLDCMotor motor = BLDCMotor(BLDC_MOTOR_PP);
-static BLDCDriver3PWM driver = BLDCDriver3PWM(MOTOR_U, MOTOR_V, MOTOR_W, MOTOR_EN);
+BLDCMotor g_motor = BLDCMotor(BLDC_MOTOR_PP);
+static BLDCDriver3PWM s_driver = BLDCDriver3PWM(MOTOR_U, MOTOR_V, MOTOR_W, MOTOR_EN);
 void foc_setup(void) {
     // initialise magnetic sensor hardware
-    sensor.init();
+    g_sensor.init();
     // link the motor to the sensor
-    motor.linkSensor(&sensor);
+    g_motor.linkSensor(&g_sensor);
     // power supply voltage
-    driver.voltage_power_supply = VOLTAGE_POWER;
-    driver.voltage_limit = VOLTAGE_LIMIT;
-    driver.init();
-    motor.linkDriver(&driver);
+    s_driver.voltage_power_supply = VOLTAGE_POWER;
+    s_driver.voltage_limit = VOLTAGE_LIMIT;
+    s_driver.init();
+    g_motor.linkDriver(&s_driver);
     // aligning voltage
-    motor.voltage_sensor_align = VOLTAGE_SENSOR_ALIGN;
+    g_motor.voltage_sensor_align = VOLTAGE_SENSOR_ALIGN;
     // choose FOC modulation (optional)
-    motor.foc_modulation = FOCModulationType::SVPWM;
+    g_motor.foc_modulation = FOCModulationType::SVPWM;
     // set motion control loop to be used
-    motor.controller = MotionControlType::torque;
+    g_motor.controller = MotionControlType::torque;
     // set torque control loop to be used
-    motor.torque_controller = TorqueControlType::voltage;
+    g_motor.torque_controller = TorqueControlType::voltage;
     // use monitoring with serial
     SerialUSB.begin(COMMANDER_BAUD_RATE);
     // comment out if not needed
-    motor.useMonitoring(SerialUSB);
+    g_motor.useMonitoring(SerialUSB);
     // initialize motor
-    motor.init();
+    g_motor.init();
     // align sensor and start FOC
-    motor.initFOC();
+    g_motor.initFOC();
     SerialUSB.println(F("Motor ready."));
     delay(1000);
 }

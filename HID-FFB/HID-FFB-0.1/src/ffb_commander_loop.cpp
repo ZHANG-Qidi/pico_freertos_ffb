@@ -2,4 +2,4 @@
 
 #include "ffb_commander_setup.h"
 
-void ffb_commander_loop(void) { ffb_commander.run(); }
+void ffb_commander_loop(void) { g_ffb_commander.run(); }

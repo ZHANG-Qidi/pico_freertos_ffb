@@ -7,9 +7,9 @@
 namespace ffb {
 namespace {
 // commander configuration commands
-constexpr char CMD_SCAN = '?';     //!< command scanning - display subscribed IDs and labels
-constexpr char CMD_VERBOSE = '@';  //!< command setting output mode
-constexpr char CMD_DECIMAL = '#';  //!< command setting decimal places
+constexpr char s_cmd_scan = '?';     //!< command scanning - display subscribed IDs and labels
+constexpr char s_cmd_verbose = '@';  //!< command setting output mode
+constexpr char s_cmd_decimal = '#';  //!< command setting decimal places
 }  // namespace
 
 Commander::Commander(Stream &serial, char eol, bool echo) {
@@ -73,7 +73,7 @@ void Commander::run(char *user_input) {
     if (!user_input || !user_input[0]) return;
     char id = user_input[0];
     switch (id) {
-        case CMD_SCAN:
+        case s_cmd_scan:
             for (int i = 0; i < call_count; i++) {
                 print(call_ids[i]);
                 print(":");
@@ -83,7 +83,7 @@ void Commander::run(char *user_input) {
                     println("");
             }
             break;
-        case CMD_VERBOSE:
+        case s_cmd_verbose:
             if (!isSentinel(user_input[1])) verbose = (VerboseMode)atoi(&user_input[1]);
             printVerbose(F("Verb:"));
             switch (verbose) {
@@ -96,7 +96,7 @@ void Commander::run(char *user_input) {
                     break;
             }
             break;
-        case CMD_DECIMAL:
+        case s_cmd_decimal:
             if (!isSentinel(user_input[1])) decimal_places = atoi(&user_input[1]);
             printVerbose(F("Decimal:"));
             println(decimal_places);

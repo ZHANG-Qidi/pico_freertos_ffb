@@ -12,7 +12,7 @@ typedef struct {
     uint16_t max;
 } adc_data_type;
 
-static adc_data_type adc_data[3] = {
+static adc_data_type s_adc_data[3] = {
     {.min = 65535},
     {.min = 65535},
     {.min = 65535},
@@ -20,9 +20,9 @@ static adc_data_type adc_data[3] = {
 
 void adc_loop(void) {
     for (int i = 0; i < 3; i++) {
-        adc_data[i].data = analogRead(i);
-        adc_data[i].min = adc_data[i].data < adc_data[i].min ? adc_data[i].data : adc_data[i].min;
-        adc_data[i].max = adc_data[i].data > adc_data[i].max ? adc_data[i].data : adc_data[i].max;
+        s_adc_data[i].data = analogRead(i);
+        s_adc_data[i].min = s_adc_data[i].data < s_adc_data[i].min ? s_adc_data[i].data : s_adc_data[i].min;
+        s_adc_data[i].max = s_adc_data[i].data > s_adc_data[i].max ? s_adc_data[i].data : s_adc_data[i].max;
     }
 }
 
@@ -30,7 +30,7 @@ void adc_loop(void) {
 #define DEAD_ZONE_HIGH (0.90)
 
 float adc_output(int index) {
-    float adc_value = (adc_data[index].data - adc_data[index].min) / (float)(adc_data[index].max - adc_data[index].min);
+    float adc_value = (s_adc_data[index].data - s_adc_data[index].min) / (float)(s_adc_data[index].max - s_adc_data[index].min);
     adc_value = (adc_value - DEAD_ZONE_LOW) / (DEAD_ZONE_HIGH - DEAD_ZONE_LOW);
     adc_value = adc_value < 0 ? 0 : adc_value;
     adc_value = adc_value > 1 ? 1 : adc_value;

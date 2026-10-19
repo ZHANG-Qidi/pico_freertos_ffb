@@ -1,5 +1,5 @@
 #include "wheel_registry.h"
-const wheel_id_t wheel_table[WHEEL_MAX] = {
+const wheel_id_t g_wheel_table[WHEEL_MAX] = {
     // Fanatec / FTEC
     [WHEEL_FTEC_CLUBSPORT_V1] = {0x0EB7, 0x038E},
     [WHEEL_FTEC_CLUBSPORT_V2] = {0x0EB7, 0x0001},

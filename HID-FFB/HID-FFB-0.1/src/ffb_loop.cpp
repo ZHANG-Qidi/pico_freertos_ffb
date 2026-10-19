@@ -3,12 +3,13 @@
 #include "esp_log.h"
 #include "ffb_commander_setup.h"
 #include "ffb_setup.h"
-static const char *TAG = "ffb_loop";
-static float g_constant_force;
-static float g_damper = MOTOR_DAMPING_MIN;
+static const char *s_tag = "ffb_loop";
+static float s_constant_force;
+static float s_damper;
 void ffb_output(float *constant_force, float *damper) {
-    *constant_force = g_constant_force;
-    *damper = g_damper;
+    *constant_force = s_constant_force;
+    const float minimum = ffb_commander_min_damping();
+    *damper = s_damper < minimum ? minimum : s_damper;
 }
 void ffb_loop(void) {
     for (int i = 0; i < FFB_EFFECT_COUNT; i++) {
@@ -28,24 +29,24 @@ void ffb_loop(void) {
             case ET_CONSTANT: {
                 int16_t magnitude = g_effect_pool[i].constant_force_report.magnitude;
                 float constant_force = magnitude * gain_effect_scale * gain_device_scale / CONSTANT_MANITUDE_MAX * ffb_commander_constant_gain();
-                g_constant_force = constant_force;
-                // ESP_LOGI(TAG, "ET_CONSTANT: %f", g_constant_force);
+                s_constant_force = constant_force;
+                // ESP_LOGI(s_tag, "ET_CONSTANT: %f", s_constant_force);
                 break;
             }
             case ET_DAMPER: {
                 float damper = (float)g_effect_pool[i].condition_report.positive_coefficient / (float)g_effect_pool[i].condition_report.positive_saturation * ffb_commander_damping_gain();
-                g_damper = damper < MOTOR_DAMPING_MIN ? MOTOR_DAMPING_MIN : damper;
-                // ESP_LOGI(TAG, "ET_DAMPER: %f", g_damper);
+                s_damper = damper;
+                // ESP_LOGI(s_tag, "ET_DAMPER: %f", s_damper);
                 break;
             }
             case ET_DAMPER_DR2: {
                 float damper = (float)g_effect_pool[i].condition_report.positive_coefficient / (float)g_effect_pool[i].condition_report.positive_saturation * ffb_commander_damping_dr2_gain();
-                g_damper = damper < MOTOR_DAMPING_MIN ? MOTOR_DAMPING_MIN : damper;
-                // ESP_LOGI(TAG, "ET_DAMPER: %f", g_damper);
+                s_damper = damper;
+                // ESP_LOGI(s_tag, "ET_DAMPER: %f", s_damper);
                 break;
             }
             default: {
-                ESP_LOGI(TAG, "Unimplemented Effect: %d", g_effect_pool[i].effect_report.type);
+                ESP_LOGI(s_tag, "Unimplemented Effect: %d", g_effect_pool[i].effect_report.type);
                 break;
             }
         }

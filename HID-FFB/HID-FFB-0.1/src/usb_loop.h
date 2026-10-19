@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern uint32_t blink_interval_ms_usb_status;
+extern uint32_t g_blink_interval_ms_usb_status;
 extern void usb_loop(void);
 #ifdef __cplusplus
 }

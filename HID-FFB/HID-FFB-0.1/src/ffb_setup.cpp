@@ -5,11 +5,11 @@
 #include "esp_log.h"
 #include "ffb_loop.h"
 #include "hidReportDesc.h"
-static const char *TAG = "ffb_setup";
+static const char *s_tag = "ffb_setup";
 //******************************** FFB Private //********************************
-static uint8_t g_effect_type;
-static uint8_t g_effect_block_index;
-static uint8_t g_effect_block_status;
+static uint8_t s_effect_type;
+static uint8_t s_effect_block_index;
+static uint8_t s_effect_block_status;
 uint8_t g_gain_device;
 ffb_effect_t g_effect_pool[FFB_EFFECT_COUNT];
 //******************************** FFB Function //********************************
@@ -23,14 +23,14 @@ uint16_t ffb_hid_get_feature(uint8_t report_id, uint8_t *buffer) {
             return 4;
         }
         case (HID_ID_BLKLDREP + 0x10 * TLID): {
-            buffer[0] = g_effect_block_index;
-            buffer[1] = g_effect_block_status;
+            buffer[0] = s_effect_block_index;
+            buffer[1] = s_effect_block_status;
             buffer[2] = 0x00;
             buffer[3] = 0x00;
             return 4;
         }
         default: {
-            ESP_LOGI(TAG, "Unimplemented GET_REPORT HID_REPORT_TYPE_FEATURE: %d", report_id);
+            ESP_LOGI(s_tag, "Unimplemented GET_REPORT HID_REPORT_TYPE_FEATURE: %d", report_id);
             break;
         }
     }
@@ -40,21 +40,21 @@ void ffb_hid_set_feature(uint8_t report_id, const uint8_t *buffer) {
     switch (report_id) {
         case (HID_ID_NEWEFREP + 0x10 * TLID): {
             uint8_t type = buffer[0];
-            g_effect_type = type;
-            g_effect_block_index = 0;
-            g_effect_block_status = BLOCK_LOAD_ERROR;
+            s_effect_type = type;
+            s_effect_block_index = 0;
+            s_effect_block_status = BLOCK_LOAD_ERROR;
             for (int i = 0; i < FFB_EFFECT_COUNT; i++) {
                 if (!g_effect_pool[i].allocated) {
                     g_effect_pool[i].allocated = BLOCK_ACCLOCATED;
-                    g_effect_block_index = i + 1;
-                    g_effect_block_status = BLOCK_LOAD_SUCCESS;
+                    s_effect_block_index = i + 1;
+                    s_effect_block_status = BLOCK_LOAD_SUCCESS;
                     break;
                 }
             }
             break;
         }
         default: {
-            ESP_LOGI(TAG, "Unimplemented SET_REPORT HID_REPORT_TYPE_FEATURE: %d", report_id);
+            ESP_LOGI(s_tag, "Unimplemented SET_REPORT HID_REPORT_TYPE_FEATURE: %d", report_id);
             break;
         }
     }
@@ -80,7 +80,7 @@ void ffb_hid_set_output(const uint8_t *buffer) {
                 case DC_DEVICE_CONTINUE:
                     break;
                 default:
-                    ESP_LOGI(TAG, "Unimplemented Usage PID Device Control: %d", buffer[1]);
+                    ESP_LOGI(s_tag, "Unimplemented Usage PID Device Control: %d", buffer[1]);
                     break;
             }
             break;
@@ -110,7 +110,7 @@ void ffb_hid_set_output(const uint8_t *buffer) {
             break;
         }
         default: {
-            ESP_LOGI(TAG, "Unimplemented SET_REPORT HID_REPORT_TYPE_OUTPUT: %d", buffer[0]);
+            ESP_LOGI(s_tag, "Unimplemented SET_REPORT HID_REPORT_TYPE_OUTPUT: %d", buffer[0]);
             break;
         }
     }

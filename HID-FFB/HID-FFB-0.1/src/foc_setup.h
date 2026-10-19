@@ -15,13 +15,13 @@ extern "C" {
 #define MOTOR_V (CONFIG_FOC_MOTOR_V)
 #define MOTOR_W (CONFIG_FOC_MOTOR_W)
 #define MOTOR_EN (CONFIG_FOC_MOTOR_EN)
-extern BLDCMotor motor;
+extern BLDCMotor g_motor;
 #if defined(CONFIG_FFB_MagneticSensorSPI)
-extern MagneticSensorSPI sensor;
+extern MagneticSensorSPI g_sensor;
 #define CONFIG_FFB_SENSOR_DIRECTION (-1.0f)
 #endif
 #if defined(CONFIG_FFB_MagneticSensorIIC)
-extern MagneticSensorI2C sensor;
+extern MagneticSensorI2C g_sensor;
 #define CONFIG_FFB_SENSOR_DIRECTION (1.0f)
 #endif
 extern void foc_setup(void);

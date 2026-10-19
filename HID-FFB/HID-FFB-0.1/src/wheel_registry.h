@@ -58,7 +58,7 @@ typedef enum {
     WHEEL_SIM_STEERING_V3,
     WHEEL_MAX
 } wheel_type_t;
-extern const wheel_id_t wheel_table[WHEEL_MAX];
+extern const wheel_id_t g_wheel_table[WHEEL_MAX];
 #ifdef __cplusplus
 }
 #endif

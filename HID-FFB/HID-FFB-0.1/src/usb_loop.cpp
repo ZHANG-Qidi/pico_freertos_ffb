@@ -9,14 +9,14 @@
 #include "SerialUSB.h"
 #include "tusb.h"
 
-static const char *TAG = "usb_loop";
+static const char *s_tag = "usb_loop";
 static void dump_hex(const uint8_t *buf, int len) {
     char line[256];
     int pos = 0;
     for (int i = 0; i < len; i++) {
         pos += snprintf(line + pos, sizeof(line) - pos, "%02X ", buf[i]);
     }
-    ESP_LOGI(TAG, "%s", line);
+    ESP_LOGI(s_tag, "%s", line);
 }
 /* Blink pattern
  * - 250 ms  : device not mounted
@@ -28,15 +28,15 @@ enum {
     BLINK_MOUNTED = 1000,
     BLINK_SUSPENDED = 2500,
 };
-uint32_t blink_interval_ms_usb_status = BLINK_NOT_MOUNTED;
+uint32_t g_blink_interval_ms_usb_status = BLINK_NOT_MOUNTED;
 //--------------------------------------------------------------------+
 // Device callbacks
 //--------------------------------------------------------------------+
 // Invoked when device is mounted
-void tud_mount_cb(void) { blink_interval_ms_usb_status = BLINK_MOUNTED; }
+void tud_mount_cb(void) { g_blink_interval_ms_usb_status = BLINK_MOUNTED; }
 // Invoked when device is unmounted
 void tud_umount_cb(void) {
-    blink_interval_ms_usb_status = BLINK_NOT_MOUNTED;
+    g_blink_interval_ms_usb_status = BLINK_NOT_MOUNTED;
     SerialUSB.clearTx();
     SerialUSB.clearRx();
 }
@@ -45,10 +45,10 @@ void tud_umount_cb(void) {
 // Within 7ms, device must draw an average of current less than 2.5 mA from bus
 void tud_suspend_cb(bool remote_wakeup_en) {
     (void)remote_wakeup_en;
-    blink_interval_ms_usb_status = BLINK_SUSPENDED;
+    g_blink_interval_ms_usb_status = BLINK_SUSPENDED;
 }
 // Invoked when usb bus is resumed
-void tud_resume_cb(void) { blink_interval_ms_usb_status = tud_mounted() ? BLINK_MOUNTED : BLINK_NOT_MOUNTED; }
+void tud_resume_cb(void) { g_blink_interval_ms_usb_status = tud_mounted() ? BLINK_MOUNTED : BLINK_NOT_MOUNTED; }
 // Invoked when sent REPORT successfully to host
 // Application can use this to send the next report
 // Note: For composite reports, report[0] is report ID
@@ -61,7 +61,7 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const *report, uint16_
 // Application must fill buffer report's content and return its length.
 // Return zero will cause the stack to STALL request
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen) {
-    ESP_LOGI(TAG, "GET_REPORT: inst=%u id=%u type=%u len=%u", instance, report_id, report_type, reqlen);
+    ESP_LOGI(s_tag, "GET_REPORT: inst=%u id=%u type=%u len=%u", instance, report_id, report_type, reqlen);
     dump_hex(buffer, reqlen);
     if (report_type == HID_REPORT_TYPE_INPUT) {
     }
@@ -75,19 +75,19 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 // Invoked when received SET_REPORT control request or
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize) {
-    // ESP_LOGI(TAG, "SET_REPORT: inst=%u id=%u type=%u size=%u", instance, report_id, report_type, bufsize);
+    // ESP_LOGI(s_tag, "SET_REPORT: inst=%u id=%u type=%u size=%u", instance, report_id, report_type, bufsize);
     // dump_hex(buffer, bufsize);
     if (report_type == HID_REPORT_TYPE_INPUT) {
-        // ESP_LOGI(TAG, "SET_REPORT: inst=%u id=%u type=%u size=%u", instance, report_id, report_type, bufsize);
+        // ESP_LOGI(s_tag, "SET_REPORT: inst=%u id=%u type=%u size=%u", instance, report_id, report_type, bufsize);
         // dump_hex(buffer, bufsize);
     }
     if (report_type == HID_REPORT_TYPE_OUTPUT) {
-        // ESP_LOGI(TAG, "SET_REPORT: inst=%u id=%u type=%u size=%u", instance, report_id, report_type, bufsize);
+        // ESP_LOGI(s_tag, "SET_REPORT: inst=%u id=%u type=%u size=%u", instance, report_id, report_type, bufsize);
         // dump_hex(buffer, bufsize);
         ffb_hid_set_output(buffer);
     }
     if (report_type == HID_REPORT_TYPE_FEATURE) {
-        ESP_LOGI(TAG, "SET_REPORT: inst=%u id=%u type=%u size=%u", instance, report_id, report_type, bufsize);
+        ESP_LOGI(s_tag, "SET_REPORT: inst=%u id=%u type=%u size=%u", instance, report_id, report_type, bufsize);
         dump_hex(buffer, bufsize);
         ffb_hid_set_feature(report_id, buffer);
     }

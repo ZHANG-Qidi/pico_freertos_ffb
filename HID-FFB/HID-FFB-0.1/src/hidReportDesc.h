@@ -24,7 +24,7 @@
 	Padding:			7bit
 */
 #include "public.h"
-const unsigned char desc_hid_report[] = {
+const unsigned char s_desc_hid_report[] = {
 #define TLID 0x1 // Top Level ID
 #if DEV_GEN
 0x05,0x01,  //    Usage Page Generic Desktop

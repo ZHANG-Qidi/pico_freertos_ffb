@@ -45,14 +45,14 @@
 #define BLINK_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define WORKER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #include "pico/async_context_freertos.h"
-static async_context_freertos_t async_context_instance;
+static async_context_freertos_t s_async_context_instance;
 // Create an async context
 static async_context_t *create_async_context(void) {
     async_context_freertos_config_t config = async_context_freertos_default_config();
     config.task_priority = WORKER_TASK_PRIORITY;      // defaults to ASYNC_CONTEXT_DEFAULT_FREERTOS_TASK_PRIORITY
     config.task_stack_size = WORKER_TASK_STACK_SIZE;  // defaults to ASYNC_CONTEXT_DEFAULT_FREERTOS_TASK_STACK_SIZE
-    if (!async_context_freertos_init(&async_context_instance, &config)) return NULL;
-    return &async_context_instance.core;
+    if (!async_context_freertos_init(&s_async_context_instance, &config)) return NULL;
+    return &s_async_context_instance.core;
 }
 #if USE_LED
 // Turn led on or off
@@ -79,16 +79,16 @@ void blink_task(__unused void *params) {
     init_led();
     TickType_t last = xTaskGetTickCount();
     for (;;) {
-        vTaskDelayUntil(&last, pdMS_TO_TICKS(blink_interval_ms_usb_status));
+        vTaskDelayUntil(&last, pdMS_TO_TICKS(g_blink_interval_ms_usb_status));
         set_led(on);
         on = !on;
     }
 }
 #endif  // USE_LED
-TaskHandle_t foc_task_handle = NULL;
+TaskHandle_t g_foc_task_handle = NULL;
 bool repeating_timer_callback(struct repeating_timer *t) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    vTaskNotifyGiveFromISR(foc_task_handle, &xHigherPriorityTaskWoken);
+    vTaskNotifyGiveFromISR(g_foc_task_handle, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     return true;
 }
@@ -131,18 +131,18 @@ void ffb_commander_task(__unused void *params) {
 }
 // async workers run in their own thread when using async_context_freertos_t with priority WORKER_TASK_PRIORITY
 static void do_work(async_context_t *context, async_at_time_worker_t *worker) { async_context_add_at_time_worker_in_ms(context, worker, 1); }
-async_at_time_worker_t worker_timeout = {.do_work = do_work};
+async_at_time_worker_t g_worker_timeout = {.do_work = do_work};
 void main_task(__unused void *params) {
     ffb_commander_setup();
     async_context_t *context = create_async_context();
     // start the worker running
-    async_context_add_at_time_worker_in_ms(context, &worker_timeout, 0);
+    async_context_add_at_time_worker_in_ms(context, &g_worker_timeout, 0);
 #if USE_LED
     // start the led blinking
     static_assert(configSUPPORT_DYNAMIC_ALLOCATION, "");
     xTaskCreate(blink_task, "blink_task", BLINK_TASK_STACK_SIZE, NULL, BLINK_TASK_PRIORITY, NULL);
 #endif  // USE_LED
-    xTaskCreate(foc_task, "foc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, &foc_task_handle);
+    xTaskCreate(foc_task, "foc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, &g_foc_task_handle);
     xTaskCreate(usb_task, "usb_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     xTaskCreate(ffb_task, "ffb_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
     xTaskCreate(adc_task, "adc_task", WORKER_TASK_STACK_SIZE, NULL, WORKER_TASK_PRIORITY, NULL);
