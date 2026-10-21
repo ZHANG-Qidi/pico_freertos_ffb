@@ -56,14 +56,12 @@ TinyUSB 负责 USB Device 协议栈和 HID 通信基础；HID-FFB 负责设备�
 | R | DR2 阻尼增益 |
 | M | 最低阻尼 |
 | E | 转向限位力系数 |
-| A | 总转向圈数，例如 A1.5 对应 540°。 |
+| A | 总转向角度（度），例如 A540。 |
 | L | 从 EEPROM 重新载入参数，回复 loaded；存储为空时保持当前参数并回复 empty。 |
 | F | 恢复 FFB_config.h 默认参数，不保存，回复 defaults loaded。 |
 | S | 保存当前参数，回复 saved；电机空闲时使用。 |
 
 ? 列出命令，@0 / @1 / @2 设置回复模式，#n 设置浮点输出小数位数。参数修改即时生效，L 和 F 只修改运行参数，发送 S 后保存；启动时加载已保存的参数，首次使用时采用 FFB_config.h 默认值。
-
-从旧版参数布局升级后，发送 F 再发送 S，以新字段顺序保存默认值；如需保留原设置，再逐项设定后发送 S。
 
 Pico 版 EEPROM 库位于 Arduino 兼容层的 libraries/EEPROM/src，提供 AVR 风格的 read、write、update、get 和 put 等接口，写入直接保存。使用 Flash 最后一个扇区，容量为 FLASH_SECTOR_SIZE；Commander 参数从 EEPROM 地址 0 开始存储。
 

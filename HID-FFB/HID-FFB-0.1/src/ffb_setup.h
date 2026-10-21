@@ -10,7 +10,7 @@ extern "C" {
 #endif
 //******************************** FFB Configuration //********************************
 #define MOTOR_GAIN_DAMPING (CONFIG_FFB_DAMPING_GAIN)
-#define MOTOR_GAIN_DAMPING_DR2 (CONFIG_FFB_DAMPING_DR2_GAIN)
+#define MOTOR_GAIN_DAMPING_DR2 (CONFIG_FFB_DAMPING_GAIN_DR2)
 #define MOTOR_GAIN_CONSTANT (CONFIG_FFB_CONSTANT_FORCE_GAIN)
 #define STOP_ZONE (CONFIG_FFB_STOP_ZONE_RAD)
 #define STOP_FORCE (CONFIG_FFB_STOP_FORCE)
