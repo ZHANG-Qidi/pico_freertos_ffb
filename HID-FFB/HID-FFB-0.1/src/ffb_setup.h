@@ -89,13 +89,16 @@ typedef enum {
     BLOCK_LOAD_FULL,
     BLOCK_LOAD_ERROR,
 } BLOCK_LOAD_STATUS;
-// Usage Device Managed Pool bit 0, Usage Shared Parameter Blocks bit 1
+// Usage Device Managed Pool
 typedef enum {
-    DRIVER_MANAGED_POOL_NO_SHARED_PARAMETER_BLOCKS = 0,
-    DEVICE_MANAGED_POOL_NO_SHARED_PARAMETER_BLOCKS = 1,
-    DRIVER_MANAGED_POOL_SHARED_PARAMETER_BLOCKS = 2,
-    DEVICE_MANAGED_POOL_SHARED_PARAMETER_BLOCKS = 3,
-} POOL_TYPE;
+    DEVICE_MANAGED_POOL_NO = 0,
+    DEVICE_MANAGED_POOL = 1,
+} POOL_TYPE_DEVICE_MANAGED_POOL;
+// Usage Shared Parameter Blocks
+typedef enum {
+    SHARED_PARAMETER_BLOCKS_NO = 0 << 1,
+    SHARED_PARAMETER_BLOCKS = 1 << 1,
+} POOL_TYPE_SHARED_PARAMETER_BLOCKS;
 // Usage Effect Operation
 typedef enum {
     EFFECT_START = 1,
