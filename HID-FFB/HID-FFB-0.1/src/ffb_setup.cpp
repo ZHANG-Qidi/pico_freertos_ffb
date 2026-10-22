@@ -19,7 +19,7 @@ uint16_t ffb_hid_get_feature(uint8_t report_id, uint8_t *buffer) {
             buffer[0] = 0xff;
             buffer[1] = 0xff;
             buffer[2] = FFB_EFFECT_COUNT;
-            buffer[3] = DEVICE_MANAGED_POOL;
+            buffer[3] = DEVICE_MANAGED_POOL_NO_SHARED_PARAMETER_BLOCKS;
             return 4;
         }
         case (HID_ID_BLKLDREP + 0x10 * TLID): {
