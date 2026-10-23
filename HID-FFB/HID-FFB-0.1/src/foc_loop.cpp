@@ -26,12 +26,12 @@ void foc_loop(void) {
         float x = (-wheel_half - angle) / STOP_ZONE;
         x = x > 1.0f ? 1.0f : x;
         float stop_force = x * x * ffb_commander_endstop_force();
-        torque_ratio += stop_force;
+        torque_ratio = stop_force > torque_ratio ? stop_force : torque_ratio;
     } else if (angle > wheel_half) {
         float x = (angle - wheel_half) / STOP_ZONE;
         x = x > 1.0f ? 1.0f : x;
         float stop_force = x * x * ffb_commander_endstop_force();
-        torque_ratio -= stop_force;
+        torque_ratio = -stop_force < torque_ratio ? -stop_force : torque_ratio;
     }
     torque_ratio = torque_ratio > 1.0f ? 1.0f : (torque_ratio < -1.0f ? -1.0f : torque_ratio);
     // voltage set point variable
