@@ -18,21 +18,21 @@ void foc_loop(void) {
     float damper;
     float constant_force;
     ffb_output(&constant_force, &damper);
-    float damping = damper * g_motor.shaft_velocity / DAMPING_MAX_VELOCITY;
-    float torque_ratio = constant_force - damping;
-    float angle = g_motor.shaft_angle;
     const float wheel_half = ffb_commander_wheel_half_range_rad();
+    float angle = g_motor.shaft_angle;
     if (angle < -wheel_half) {
         float x = (-wheel_half - angle) / STOP_ZONE;
         x = x > 1.0f ? 1.0f : x;
         float stop_force = x * x * ffb_commander_endstop_force();
-        torque_ratio = stop_force > torque_ratio ? stop_force : torque_ratio;
+        constant_force = stop_force > constant_force ? stop_force : constant_force;
     } else if (angle > wheel_half) {
         float x = (angle - wheel_half) / STOP_ZONE;
         x = x > 1.0f ? 1.0f : x;
         float stop_force = x * x * ffb_commander_endstop_force();
-        torque_ratio = -stop_force < torque_ratio ? -stop_force : torque_ratio;
+        constant_force = -stop_force < constant_force ? -stop_force : constant_force;
     }
+    float damping = damper * g_motor.shaft_velocity / DAMPING_MAX_VELOCITY;
+    float torque_ratio = constant_force - damping;
     torque_ratio = torque_ratio > 1.0f ? 1.0f : (torque_ratio < -1.0f ? -1.0f : torque_ratio);
     // voltage set point variable
     float target_voltage = VOLTAGE_LIMIT * torque_ratio;
