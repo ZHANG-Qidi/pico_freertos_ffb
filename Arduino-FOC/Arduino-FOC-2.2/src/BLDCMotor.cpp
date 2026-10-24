@@ -585,16 +585,19 @@ void BLDCMotor::setPhaseVoltage(float Uq, float Ud, float angle_el) {
             break;
         }
         case FOCModulationType::SVPWM: {
-            // angle normalization in between 0 and 2pi
-            // only necessary if using _sin and _cos - approximation functions
-            angle_el = _normalizeAngle(angle_el);
             float Uout;
             // a bit of optitmisation
             if (Ud) {  // only if Ud and Uq set
                 // _sqrt is an approx of sqrt (3-4% error)
                 Uout = _sqrt(Ud * Ud + Uq * Uq) / driver->voltage_limit;
+                // angle normalisation in between 0 and 2pi
+                // only necessary if using _sin and _cos - approximation functions
+                angle_el = _normalizeAngle(angle_el + atan2(Uq, Ud));
             } else {  // only Uq available - no need for atan2 and sqrt
                 Uout = Uq / driver->voltage_limit;
+                // angle normalisation in between 0 and 2pi
+                // only necessary if using _sin and _cos - approximation functions
+                angle_el = _normalizeAngle(angle_el + _PI_2);
             }
             float fundamental_u = _sin(_normalizeAngle(angle_el - M_TWOPI / 3.0f));
             float fundamental_v = _sin(_normalizeAngle(angle_el));
