@@ -5,7 +5,7 @@
 #include "esp_log.h"
 #include "ffb_loop.h"
 #include "hidReportDesc.h"
-static const char *s_tag = "ffb_setup";
+static const char *TAG = "ffb_setup";
 //******************************** FFB Private //********************************
 static uint8_t s_effect_type;
 static uint8_t s_effect_block_index;
@@ -30,7 +30,7 @@ uint16_t ffb_hid_get_feature(uint8_t report_id, uint8_t *buffer) {
             return 4;
         }
         default: {
-            ESP_LOGI(s_tag, "Unimplemented GET_REPORT HID_REPORT_TYPE_FEATURE: %d", report_id);
+            ESP_LOGI(TAG, "Unimplemented GET_REPORT HID_REPORT_TYPE_FEATURE: %d", report_id);
             break;
         }
     }
@@ -54,7 +54,7 @@ void ffb_hid_set_feature(uint8_t report_id, const uint8_t *buffer) {
             break;
         }
         default: {
-            ESP_LOGI(s_tag, "Unimplemented SET_REPORT HID_REPORT_TYPE_FEATURE: %d", report_id);
+            ESP_LOGI(TAG, "Unimplemented SET_REPORT HID_REPORT_TYPE_FEATURE: %d", report_id);
             break;
         }
     }
@@ -80,7 +80,7 @@ void ffb_hid_set_output(const uint8_t *buffer) {
                 case DC_DEVICE_CONTINUE:
                     break;
                 default:
-                    ESP_LOGI(s_tag, "Unimplemented Usage PID Device Control: %d", buffer[1]);
+                    ESP_LOGI(TAG, "Unimplemented Usage PID Device Control: %d", buffer[1]);
                     break;
             }
             break;
@@ -110,7 +110,7 @@ void ffb_hid_set_output(const uint8_t *buffer) {
             break;
         }
         default: {
-            ESP_LOGI(s_tag, "Unimplemented SET_REPORT HID_REPORT_TYPE_OUTPUT: %d", buffer[0]);
+            ESP_LOGI(TAG, "Unimplemented SET_REPORT HID_REPORT_TYPE_OUTPUT: %d", buffer[0]);
             break;
         }
     }

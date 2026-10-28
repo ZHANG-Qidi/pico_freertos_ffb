@@ -7,7 +7,6 @@
 // magnetic sensor instance - SPI
 MagneticSensorSPI g_sensor = MagneticSensorSPI(AS5147_SPI, SPI_MASTER_CS_IO);
 #endif
-// #define CONFIG_FFB_MagneticSensorIIC
 #if defined(CONFIG_FFB_MagneticSensorIIC)
 // magnetic sensor instance - I2C
 MagneticSensorI2C g_sensor = MagneticSensorI2C(AS5600_I2C);
